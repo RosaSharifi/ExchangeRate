@@ -63,14 +63,16 @@ jobs:
         if: failure()
         run: echo "Build failed!"
 
-      # Extract version from pom.xml
-      - name: Extract version
-        id: extract_version
-        run: |
-          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      # Docker build and push steps
+  docker-build-and-push:
+    needs: build  # Ensures this job runs after the build job
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'  # Conditional execution
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -79,6 +81,13 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Extract version from pom.xml
+      - name: Extract version
+        id: extract_version
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
