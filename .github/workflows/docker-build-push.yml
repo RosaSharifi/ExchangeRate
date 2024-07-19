@@ -1,7 +1,25 @@
 name: Docker Build and Push
 
 on:
-  workflow_dispatch:  # Allows manual triggering
+  workflow_dispatch: # Allows manual triggering
+    inputs:
+      tag_choice:
+        description: 'Choose tag method'
+        required: true
+        default: 'use_version'
+        type: choice
+        options:
+          - 'use_version'
+          - 'custom_tag'
+      tagName:
+        description: 'Enter Docker tag name'
+        type: string
+        required: false
+      build_latest:
+        description: 'Build and push the latest image?'
+        required: true
+        default: false
+        type: boolean
 
 jobs:
   docker-build-and-push:
@@ -26,13 +44,38 @@ jobs:
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Build and push Docker image
+
+      - name: Set Docker tag
+        id: set_tag
+        run: |
+          if [ "${{ github.event.inputs.tag_choice }}" = "custom_tag" ];
+          then
+            if [ -z "${{ github.event.inputs.custom_tag }}" ];
+            then
+              echo "Error: Custom tag cannot be empty when tag_choice is 'custom_tag'"
+              exit 1
+            fi
+            echo "TAG=${{ github.event.inputs.custom_tag }}" >> $GITHUB_ENV
+          else
+            echo "TAG=${{ env.VERSION }}" >> $GITHUB_ENV
+          fi
+
+      - name: Build and push Docker image with version tag
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/exchange_rate:${{ env.VERSION }}
+            ${{ secrets.DOCKER_USERNAME }}/exchange_rate:${{ env.TAG }}
+          file: Dockerfile
+
+      - name: Build and push Docker image with latest tag
+        if: ${{ github.event.inputs.build_latest == 'true' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
             ${{ secrets.DOCKER_USERNAME }}/exchange_rate:latest
           file: Dockerfile
 
