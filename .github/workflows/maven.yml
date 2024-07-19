@@ -62,3 +62,33 @@ jobs:
       - name: Notify on failure
         if: failure()
         run: echo "Build failed!"
+
+      # Extract version from pom.xml
+      - name: Extract version
+        id: extract_version
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      # Docker build and push steps
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/exchange_rate:${{ env.VERSION }}
+            ${{ secrets.DOCKER_USERNAME }}/exchange_rate:latest
+          file: Dockerfile
+
+      - name: Log out from Docker Hub
+        run: docker logout
