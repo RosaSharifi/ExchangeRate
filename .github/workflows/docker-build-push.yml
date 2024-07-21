@@ -48,13 +48,16 @@ jobs:
       - name: Set Docker tag
         id: set_tag
         run: |
-          if [ "${{ github.event.inputs.tag_choice }}" = "custom_tag" ]; then
-            if [ -z "${{ github.event.inputs.custom_tag }}" ]; then
+          TAG_CHOICE="${{ github.event.inputs.tag_choice }}"
+          CUSTOM_TAG="${{ github.event.inputs.custom_tag }}"
+          
+          if [ "$TAG_CHOICE" = "custom_tag" ]; then
+            if [ -z "$CUSTOM_TAG" ]; then
+              echo "$CUSTOM_TAG"
               echo "Error: Custom tag cannot be empty when tag_choice is 'custom_tag'"
-              echo ${{ github.event.inputs.custom_tag }}
               exit 1
             fi
-            echo "TAG=${{ github.event.inputs.custom_tag }}" >> $GITHUB_ENV
+            echo "TAG=$CUSTOM_TAG" >> $GITHUB_ENV
           else
             echo "TAG=${{ env.VERSION }}" >> $GITHUB_ENV
           fi
