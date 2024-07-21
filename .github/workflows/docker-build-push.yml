@@ -11,7 +11,7 @@ on:
         options:
           - 'use_version'
           - 'custom_tag'
-      tagName:
+      custom_tag:
         description: 'Enter custom tag name'
         type: string
         required: false
