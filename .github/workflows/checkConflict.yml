@@ -1,0 +1,41 @@
+name: Check for Merge Conflicts
+
+on:
+  push:
+    branches:
+      - 'develop'  # Trigger on push to any branch
+
+jobs:
+  check-conflicts:
+    name: Check Conflict before push code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Ensure the full history is fetched to perform the merge check
+
+      - name: Set up Git
+        run: |
+          git config user.name "RosaSharifi"
+          git config user.email "raziyeh.sharifi7@gmail.com"
+
+      - name: Fetch main branch
+        run: git fetch origin main
+
+      - name: Check for merge conflicts
+        id: check-conflicts
+        run: |
+          git merge-base HEAD origin/main
+          git merge --no-commit --no-ff origin/main || echo "has_conflict=true" >> $GITHUB_ENV
+
+      - name: Fail if there are merge conflicts
+        if: env.has_conflict == 'true'
+        run: |
+          echo "Merge conflict detected. Please resolve conflicts before creating a pull request."
+          exit 1
+
+      - name: Success message
+        if: env.has_conflict != 'true'
+        run: echo "No merge conflicts detected. You can create a pull request."
