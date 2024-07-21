@@ -61,7 +61,10 @@ jobs:
           else
             echo "TAG=${{ env.VERSION }}" >> $GITHUB_ENV
           fi
-
+          
+      - name: Build with Maven
+        run: mvn --batch-mode --update-snapshots clean install
+        
       - name: Build and push Docker image with version tag
         uses: docker/build-push-action@v5
         with:
