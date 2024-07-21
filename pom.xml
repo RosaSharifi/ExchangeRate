@@ -12,7 +12,7 @@
 
     <groupId>ir.rayanbourse</groupId>
     <artifactId>ExchangeRateService</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <name>ExchangeRateService</name>
     <description>ExchangeRateService</description>
 
